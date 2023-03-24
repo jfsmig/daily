@@ -71,7 +71,12 @@ cause = Choice("Feeling sick this morning",
                "Not feeling great",
                "I have a dog grooming errand",
                "My wife is stuck in her car",
-               "I had a hard time last night")
+               "I had a hard time last night",
+               "I have to file for a new ID card",
+               "I've lost my keys in the river",
+               "someone stole my catalytic exhaust pipe",
+               "My colonoscopy won't be done yet",
+               "My prostate exam doesnt happen as expected")
 
 conjonction_cause = Choice("because",
                            "'cos",
