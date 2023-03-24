@@ -55,29 +55,30 @@ class Writer(object):
     def __init__(self):
         self.tokens_ = list()
     def __str__(self):
-        return ' '.join(self.tokens_)
+        s = ' '.join(self.tokens_)
+        return substitute(' +', ' ', s.strip())
     def write(self, x):
         self.tokens_.append(x)
     
 seed(None)
 
 statement = Choice("I cannot attend the daily meeting",
-                   "Going to miss the meeting",
-                   "Gonna miss the meeting",
+                   "going to miss the meeting",
+                   "gonna miss the meeting",
                    "I won't be able to attend the daily meeting")
 
-cause = Choice("Feeling sick this morning",
-               "Woke up with a pretty bad headache",
-               "Not feeling great",
+cause = Choice("feeling sick this morning",
+               "woke up with a pretty bad headache",
+               "not feeling great",
                "I have a dog grooming errand",
-               "My wife is stuck in her car",
+               "my wife is stuck in her car",
                "I had a hard time last night",
                "I have to file for a new ID card",
                "I've lost my keys in the river",
-               "someone stole my catalytic exhaust pipe",
-               "My colonoscopy won't be done yet",
-               "My prostate exam doesnt happen as expected",
-               "My nan slipped on a dung")
+               "someone stole my catalytic converter",
+               "my colonoscopy won't be done yet",
+               "my prostate exam doesnt happen as expected",
+               "my nan slipped on a dung")
 
 conjonction_cause = Choice("because",
                            "'cos",
@@ -93,5 +94,5 @@ sentence = Choice(Seq(statement, conjonction_cause, cause),
 
 out = Writer()
 sentence.expand(out)
-print(substitute(' +', ' ', str(out).strip()))
+print(str(out))
 
