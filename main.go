@@ -14,27 +14,46 @@
 package main
 
 import (
-	"fmt"
+	"github.com/jfsmig/daily/excuse"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/jfsmig/daily/excuse"
 )
 
-var nodaily excuse.Node
+type HandlerFunc func(http.ResponseWriter, *http.Request)
 
 func main() {
-	var err error
-	nodaily, err = excuse.NewJohn()
-	http.HandleFunc("/excuse", doExcuse)
-	if err = http.ListenAndServe(":8080", nil); err != nil {
+	http.HandleFunc("/", func() HandlerFunc {
+		type Args struct {
+			Excuse string
+		}
+		nodaily, err := excuse.NewJohn()
+		if err != nil {
+			log.Fatalln("excuse init error: ", err)
+		}
+		tpl := template.Must(template.New("index").Parse(templateIndexText))
+		return func(w http.ResponseWriter, req *http.Request) {
+			env := excuse.NewEnv()
+			var sb strings.Builder
+			_ = nodaily.Expand(req.Context(), &sb, env)
+			args := Args{Excuse: sb.String()}
+			if err := tpl.Execute(w, args); err != nil {
+				log.Println("Template rendering error:", err)
+				w.WriteHeader(500)
+			}
+		}
+	}())
+
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalln("http server error:", err)
 	}
 }
 
-func doExcuse(w http.ResponseWriter, req *http.Request) {
-	var buf strings.Builder
-
-	_, _ = fmt.Fprint(w, buf.String())
-}
+var templateIndexText = `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Daily Meeting</title>
+</head><body itemscope itemtype="http://schema.org/WebPage">
+<main><h1>Your daily excuse</h1><p>{{.Excuse}}</p></main>
+</body></html>`

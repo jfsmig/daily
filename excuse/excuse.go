@@ -16,11 +16,14 @@ import (
 	"context"
 	"io"
 	"math/rand"
+	"time"
 )
 
 type Env struct {
-	prng *rand.Rand
+	Prng *rand.Rand
 }
+
+func NewEnv() *Env { return &Env{Prng: rand.New(rand.NewSource(time.Now().UnixNano()))} }
 
 type Node interface {
 	Expand(ctx context.Context, w io.StringWriter, env *Env) error
@@ -45,7 +48,7 @@ type Or struct {
 }
 
 func (t *Or) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
-	n := env.prng.Intn(len(t.items))
+	n := env.Prng.Intn(len(t.items))
 	return t.items[n].Expand(ctx, w, env)
 }
 

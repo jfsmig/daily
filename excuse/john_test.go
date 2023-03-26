@@ -14,7 +14,7 @@ func TestNewJohn(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx := context.TODO()
-	env := Env{prng: rand.New(rand.NewSource(time.Now().UnixNano()))}
+	env := Env{Prng: rand.New(rand.NewSource(time.Now().UnixNano()))}
 
 	var sb strings.Builder
 	for i := 0; i < 10; i++ {
