@@ -51,9 +51,6 @@ func main() {
 }
 
 var templateIndexText = `<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8">
-<title>Daily Meeting</title>
-</head><body itemscope itemtype="http://schema.org/WebPage">
-<main><h1>Your daily excuse</h1><p>{{.Excuse}}</p></main>
-</body></html>`
+<html lang="en"><head><meta charset="UTF-8"><title>Daily Excuse</title><style>
+h1 { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", sans-serif; }
+</style></head><body itemscope itemtype="http://schema.org/WebPage"><main><h1>{{.Excuse}}</h1></main></body></html>`
