@@ -14,16 +14,39 @@
 package main
 
 import (
-	"github.com/jfsmig/daily/excuse"
+	_ "embed"
 	"html/template"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/jfsmig/daily/excuse"
 )
+
+//go:embed shrug-emoticon.png
+var icon []byte
+
+//go:embed robots.txt
+var robots []byte
+
+//go:embed index.html
+var templateIndexText string
 
 type HandlerFunc func(http.ResponseWriter, *http.Request)
 
 func main() {
+	http.HandleFunc("/favicon.png", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) {
+			w.Write(icon)
+		}
+	}())
+
+	http.HandleFunc("/robots.txt", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) {
+			w.Write(robots)
+		}
+	}())
+
 	http.HandleFunc("/", func() HandlerFunc {
 		type Args struct {
 			Excuse string
@@ -49,8 +72,3 @@ func main() {
 		log.Fatalln("http server error:", err)
 	}
 }
-
-var templateIndexText = `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><title>Daily Excuse</title><style>
-h1 { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", sans-serif; }
-</style></head><body itemscope itemtype="http://schema.org/WebPage"><main><h1>{{.Excuse}}</h1></main></body></html>`
