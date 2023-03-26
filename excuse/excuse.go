@@ -13,14 +13,49 @@
 package excuse
 
 import (
-	"errors"
+	"context"
 	"io"
+	"math/rand"
 )
 
-type Node interface {
-	Expand(w io.Writer) error
+type Env struct {
+	prng *rand.Rand
 }
 
-func NewJohn() (Node, error) {
-	return nil, errors.New("not implemented")
+type Node interface {
+	Expand(ctx context.Context, w io.StringWriter, env *Env) error
 }
+
+type Concat struct {
+	items []Node
+}
+
+func (t *Concat) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
+	for idx, _ := range t.items {
+		if err := t.items[idx].Expand(ctx, w, env); err != nil {
+			return err
+		}
+		_, _ = w.WriteString(" ")
+	}
+	return nil
+}
+
+type Or struct {
+	items []Node
+}
+
+func (t *Or) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
+	n := env.prng.Intn(len(t.items))
+	return t.items[n].Expand(ctx, w, env)
+}
+
+type Term string
+
+func (t *Term) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
+	_, err := w.WriteString(string(*t))
+	return err
+}
+
+func NewChoice(items ...Node) Node   { return &Or{items: items} }
+func NewSequence(items ...Node) Node { return &Concat{items: items} }
+func NewTerm(s string) Node          { t := Term(s); return &t }

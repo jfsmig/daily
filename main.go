@@ -18,6 +18,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/jfsmig/daily/excuse"
 )
 
 var nodialy excuse.Node
@@ -25,13 +27,13 @@ var nodialy excuse.Node
 func main() {
 	var err error
 	nodialy, err = excuse.NewJohn()
-	http.HandleFunc("/excuse", excuse)
+	http.HandleFunc("/excuse", doExcuse)
 	if err = http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalln("http server error:", err)
 	}
 }
 
-func excuse(w http.ResponseWriter, req *http.Request) {
+func doExcuse(w http.ResponseWriter, req *http.Request) {
 	var buf strings.Builder
 
 	fmt.Fprint(w, buf.String())
