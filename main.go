@@ -17,6 +17,7 @@ import (
 	_ "embed"
 	ht "html/template"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
 	tt "text/template"
@@ -86,9 +87,10 @@ func main() {
 		}
 		tpl := ht.Must(ht.New("index").Parse(templateIndexText))
 		return func(w http.ResponseWriter, req *http.Request) {
-			env := excuse.NewEnv()
+			// This will change the excuse each hour
+			env := excuse.Env{Prng: rand.New(rand.NewSource(time.Now().Truncate(time.Hour).Unix()))}
 			var sb strings.Builder
-			_ = nodaily.Expand(req.Context(), &sb, env)
+			_ = nodaily.Expand(req.Context(), &sb, &env)
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
 			w.Header().Set("Expires", "0")
