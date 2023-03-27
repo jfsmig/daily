@@ -19,17 +19,26 @@ var conjonction_consequence = NewChoice(
 
 var cause = NewChoice(
 	NewTerm("feeling sick this morning"),
-	NewTerm("woke up with a pretty bad headache"),
-	NewTerm("not feeling great"),
+	NewTerm("I am having all the symptoms of a cold"),
+	NewTerm("I think I have a light flu"),
+	NewTerm("it's haircut day! The only time slot available is incompatible with the meeting"),
+	NewTerm("it's shower day and ... it takes time"),
+	NewTerm("I'm waiting for a parcel delivery"),
+	NewTerm("I need to go to the parcel pickup point"),
+	NewTerm("it's my naturist day, and I wouldn't expose my perfect body to the team."),
+	NewTerm("I woke up with a pretty bad headache"),
+	NewTerm("I'm not feeling great"),
 	NewTerm("I have a dog grooming errand"),
 	NewTerm("my wife is stuck in her car"),
 	NewTerm("I had a hard time last night"),
 	NewTerm("I have to file for a new ID card"),
+	NewTerm("I need to visit the couty clerk office to renew my license plates."),
 	NewTerm("I've lost my keys in the river"),
 	NewTerm("someone stole my catalytic converter"),
+	NewTerm("I have a dentist appointment and it will be hard to speak clearly"),
 	NewTerm("my colonoscopy won't be done yet"),
 	NewTerm("my prostate exam doesnt happen as expected"),
-	NewTerm("my nan slipped on a dung"))
+	NewTerm("my nan slipped on a dung (long story short...)"))
 
 var sentence = NewChoice(
 	NewSequence(statement, conjonction_cause, cause),
