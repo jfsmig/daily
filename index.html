@@ -24,22 +24,29 @@
     <meta property="og:description" content="Today's excuse to not attend the daily meeting"/>
     <meta property="og:image" content="/favicon.png"/>
     <meta property="fb:admins" content="jf.smigielski"/>
+    <meta http-equiv="refresh" content="{{.Refresh}}">
     <style>
-        h1 { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", sans-serif; }
-        p { color: gray; }
+        h1, h2 { font-family: "Kristen ITC", "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Chalkboard", "TSCu_Comic", sans-serif; }
+        h1 { color: black; }
+        h2 { color: gray; }
+        p, footer { visibility: hidden; }
         main { text-align: center; }
     </style>
 </head>
 <body itemscope itemtype="http://schema.org/WebPage">
-<!-- Your daily enterprise-grade excuse to not attend your daily meeting. Use with parsimony.
-It's very important to vary the excuses to remain credible and never let any sort of repetition to take place.
-Some excuses are real, the rest is inspired by real cases. -->
 <main>
     <h1>{{.Excuse}}</h1>
-    <p>Inspired by real life excuses.</p>
+    <h2>☝️ Your excuse to skip that meeting ☝️</h2>
+    <p>
+        Your daily enterprise-grade excuse to not attend your daily meeting. Use with parsimony.
+        It's very important to vary the excuses to remain credible and never let any sort of repetition to take place.
+        Some excuses are real, the rest is inspired by real cases.
+    </p>
 </main>
 </body>
-<!-- Code hosted on https://github.com/jfsmig/daily licensed under the terms of the GNU Affero GPL v3
- Hosted in Roubaix by https://ovhcloud.com
- Tooled by https://clever-cloud.com -->
+<footer>
+    Code hosted on https://github.com/jfsmig/daily,
+    Hosted in Roubaix by https://ovhcloud.com,
+    Tooled by https://clever-cloud.com
+</footer>
 </html>
