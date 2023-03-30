@@ -16,14 +16,13 @@ import (
 	"context"
 	"io"
 	"math/rand"
-	"time"
 )
 
 type Env struct {
 	Prng *rand.Rand
 }
 
-func NewEnv() *Env { return &Env{Prng: rand.New(rand.NewSource(time.Now().UnixNano()))} }
+func NewEnv(seed int64) *Env { return &Env{Prng: rand.New(rand.NewSource(seed))} }
 
 type Node interface {
 	Expand(ctx context.Context, w io.StringWriter, env *Env) error

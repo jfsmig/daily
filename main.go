@@ -17,7 +17,6 @@ import (
 	_ "embed"
 	ht "html/template"
 	"log"
-	"math/rand"
 	"net/http"
 	"strings"
 	tt "text/template"
@@ -25,6 +24,8 @@ import (
 
 	"github.com/jfsmig/daily/excuse"
 )
+
+const defaultTimeSlot = 5 * time.Minute
 
 //go:embed shrug-emoticon.png
 var icon []byte
@@ -88,9 +89,9 @@ func main() {
 		tpl := ht.Must(ht.New("index").Parse(templateIndexText))
 		return func(w http.ResponseWriter, req *http.Request) {
 			// This will change the excuse each hour
-			env := excuse.Env{Prng: rand.New(rand.NewSource(time.Now().Truncate(time.Hour).Unix()))}
+			env := excuse.NewEnv(time.Now().Truncate(defaultTimeSlot).UnixNano())
 			var sb strings.Builder
-			_ = nodaily.Expand(req.Context(), &sb, &env)
+			_ = nodaily.Expand(req.Context(), &sb, env)
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
 			w.Header().Set("Expires", "0")
