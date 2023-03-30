@@ -25,7 +25,7 @@ import (
 	"github.com/jfsmig/daily/excuse"
 )
 
-const defaultTimeSlot = 5 * time.Minute
+const defaultTimeSlot time.Duration = 5 * time.Minute
 
 //go:embed shrug-emoticon.png
 var icon []byte
@@ -80,7 +80,8 @@ func main() {
 
 	http.HandleFunc("/", func() HandlerFunc {
 		type Args struct {
-			Excuse string
+			Excuse  string
+			Refresh int64
 		}
 		nodaily, err := excuse.NewJohn()
 		if err != nil {
@@ -95,7 +96,10 @@ func main() {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
 			w.Header().Set("Expires", "0")
-			args := Args{Excuse: sb.String()}
+			args := Args{
+				Excuse:  sb.String(),
+				Refresh: int64(defaultTimeSlot.Seconds()),
+			}
 			if err := tpl.Execute(w, args); err != nil {
 				log.Println("Template rendering error:", err)
 			}
