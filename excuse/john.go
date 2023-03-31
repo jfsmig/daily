@@ -18,10 +18,10 @@ var conjonction_consequence = NewChoice(
 	NewTerm("therefore"))
 
 var cause = NewChoice(
-	NewTerm("feeling sick this morning"),
+	NewTerm("I'm feeling sick this morning"),
+	NewTerm("I'm not feeling great"),
 	NewTerm("I am having all the symptoms of a cold"),
 	NewTerm("I think I have a light flu"),
-	NewTerm("I'm not feeling great"),
 	NewTerm("the network is down in the whole area, currently using a weak phone connection"),
 	NewTerm("the network is down, I expect someone to check for the cables right during the meeting"),
 	NewTerm("network outage here!"),
