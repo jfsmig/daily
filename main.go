@@ -78,6 +78,23 @@ func main() {
 		}
 	}())
 
+	http.HandleFunc("/raw", func() HandlerFunc {
+		nodaily, err := excuse.NewJohn()
+		if err != nil {
+			log.Fatalln("excuse init error: ", err)
+		}
+		return func(w http.ResponseWriter, req *http.Request) {
+			stob := STOBWriter{out: w}
+			env := excuse.NewEnv(time.Now().Truncate(defaultTimeSlot).UnixNano())
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+			if err := nodaily.Expand(req.Context(), &stob, env); err != nil {
+				log.Println("Template rendering error:", err)
+			}
+		}
+	}())
+
 	http.HandleFunc("/", func() HandlerFunc {
 		type Args struct {
 			Excuse  string

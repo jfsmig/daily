@@ -11,30 +11,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package excuse
+package main
 
-import (
-	"context"
-	"math/rand"
-	"strings"
-	"testing"
-	"time"
-)
+import "io"
 
-func TestNewJohn(t *testing.T) {
-	john, err := NewJohn()
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctx := context.TODO()
-	env := Env{Prng: rand.New(rand.NewSource(time.Now().UnixNano()))}
+type STOBWriter struct {
+	out io.Writer
+}
 
-	var sb strings.Builder
-	for i := 0; i < 10; i++ {
-		sb.Reset()
-		if err = john.Expand(ctx, &sb, &env); err != nil {
-			t.Fatal(err)
-		}
-		t.Log(">", sb.String())
-	}
+func (stob *STOBWriter) WriteString(s string) (int, error) {
+	return stob.out.Write([]byte(s))
 }
