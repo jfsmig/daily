@@ -49,6 +49,7 @@ var cause = NewChoice(
 	NewTerm("it's my naturist day, and I wouldn't expose my perfect body to the team."),
 	NewTerm("I woke up with a pretty bad headache"),
 	NewTerm("I have a dog grooming errand"),
+	NewTerm("my wife has a doctor apointment, I need to take her"),
 	NewTerm("my wife is stuck in her car and I have to go help her"),
 	NewTerm("I had a hard time last night"),
 	NewTerm("I have to file for a new ID card"),
