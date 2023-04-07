@@ -90,57 +90,33 @@ func main() {
 		}
 	}())
 
+	generateExcuseRaw := func(w http.ResponseWriter, req *http.Request, e excuse.Node) {
+		var sb strings.Builder
+		env := excuse.NewEnv(time.Now().UnixNano())
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		if err := e.Expand(req.Context(), &sb, env); err != nil {
+			log.Println("Template rendering error:", err)
+		} else {
+			s := strings.Trim(sb.String(), " ")
+			w.Write([]byte(s + "\n"))
+		}
+	}
+
 	http.HandleFunc("/raw/all", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) {
-			var sb strings.Builder
-			env := excuse.NewEnv(time.Now().UnixNano())
-			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-			w.Header().Set("Pragma", "no-cache")
-			w.Header().Set("Expires", "0")
-			if err := excuseAny.Expand(req.Context(), &sb, env); err != nil {
-				log.Println("Template rendering error:", err)
-			} else {
-				s := strings.Trim(sb.String(), " ")
-				w.Write([]byte(s + "\n"))
-			}
-		}
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseAny) }
 	}())
-
 	http.HandleFunc("/raw/ooo", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) {
-			var sb strings.Builder
-			env := excuse.NewEnv(time.Now().UnixNano())
-			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-			w.Header().Set("Pragma", "no-cache")
-			w.Header().Set("Expires", "0")
-			if err := excuseOOO.Expand(req.Context(), &sb, env); err != nil {
-				log.Println("Template rendering error:", err)
-			} else {
-				s := strings.Trim(sb.String(), " ")
-				w.Write([]byte(s + "\n"))
-			}
-		}
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseOOO) }
 	}())
-
 	http.HandleFunc("/raw/meeting", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) {
-			var sb strings.Builder
-			env := excuse.NewEnv(time.Now().UnixNano())
-			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-			w.Header().Set("Pragma", "no-cache")
-			w.Header().Set("Expires", "0")
-			if err := excuseMeeting.Expand(req.Context(), &sb, env); err != nil {
-				log.Println("Template rendering error:", err)
-			} else {
-				s := strings.Trim(sb.String(), " ")
-				w.Write([]byte(s + "\n"))
-			}
-		}
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseMeeting) }
 	}())
 
 	tplMain := ht.Must(ht.New("index").Parse(templateIndexText))
 
-	generateExcuse := func(w http.ResponseWriter, req *http.Request, gen excuse.Node) {
+	generateExcuseHtml := func(w http.ResponseWriter, req *http.Request, gen excuse.Node) {
 		type Args struct {
 			Excuse  string
 			Refresh int64
@@ -162,16 +138,16 @@ func main() {
 	}
 
 	http.HandleFunc("/w/all", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseAny) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
 	}())
 	http.HandleFunc("/w/ooo", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseOOO) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseOOO) }
 	}())
 	http.HandleFunc("/w/meeting", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseMeeting) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseMeeting) }
 	}())
 	http.HandleFunc("/", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseAny) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
 	}())
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {

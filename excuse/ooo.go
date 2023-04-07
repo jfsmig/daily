@@ -56,7 +56,7 @@ var oooCausePolice = NewChoice(
 	NewTerm("I'm using a new contact lens solution and my eyes are watering"),
 )
 
-var oooCauseMedical = NewChoice(
+var oooCauseMedicalBare = NewChoice(
 	NewTerm("I tripped over my dog and was knocked unconscious"),
 	NewTerm("I burned my hand on the toaster"),
 	NewTerm("I hurt myself bowling"),
@@ -74,10 +74,28 @@ var oooCauseMedical = NewChoice(
 	NewTerm("someone slipped drugs in my drink last night"),
 )
 
+var oooCauseMedical = NewSequence(
+	oooCauseMedicalBare,
+	NewChoice(
+		NewTerm(""),
+		NewTerm(", I should go the the hospital"),
+		NewTerm(", maybe I should go the the hospital"),
+		NewTerm(", I am heading to the doctor"),
+		NewTerm(", so it seems I need a MD"),
+	),
+)
+
 var oooCauseVet = NewChoice(
 	NewTerm("my fish is sick"),
 	NewTerm("my cat puked last night, it kept me up late. I'm too tired"),
 )
+
+func NewOOOMedical() (Node, error) {
+	cause := oooCauseMedical
+	return NewChoice(
+		NewSequence(oooTodayStatement, conjonction_cause, cause),
+		NewSequence(cause, conjonction_consequence, oooTodayStatement)), nil
+}
 
 func NewOOO() (Node, error) {
 	cause := NewChoice(oooCauseMedical, oooCauseVet, oooCausePolice, oooCauseBadLuck, oooCauseCotorep)
