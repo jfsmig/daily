@@ -39,7 +39,7 @@ var cause = NewChoice(
 	NewTerm("the network is down, I expect someone to check for the cables right during the meeting"),
 	NewTerm("network outage here!"),
 	NewTerm("power outage here in the area, I am going downtown to fetch some fuel for the generator"),
-	NewTerm("due to hash weather conditions, I suffer an african-grade network stability"),
+	NewTerm("due to harsh weather conditions, I suffer an african-grade network stability"),
 	NewTerm("it's blizzard day, snow is piling all around here and it affects the network infrastructure"),
 	NewTerm("due to the blizzard, the power supply isn't stable enough to let me attend"),
 	NewTerm("it's haircut day! The only time slot available is incompatible with the meeting"),
