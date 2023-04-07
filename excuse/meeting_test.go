@@ -21,8 +21,8 @@ import (
 	"time"
 )
 
-func TestNewJohn(t *testing.T) {
-	john, err := NewJohn()
+func TestGenerator(t *testing.T) {
+	john, err := NewGenerator()
 	if err != nil {
 		t.Fatal(err)
 	}

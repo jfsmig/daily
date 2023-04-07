@@ -27,6 +27,7 @@ func NewEnv(seed int64) *Env { return &Env{Prng: rand.New(rand.NewSource(seed))}
 
 type Node interface {
 	Expand(ctx context.Context, w io.StringWriter, env *Env) error
+	Weight() uint64
 }
 
 type Concat struct {
@@ -43,6 +44,17 @@ func (t *Concat) Expand(ctx context.Context, w io.StringWriter, env *Env) error 
 	return nil
 }
 
+func (t *Concat) Weight() uint64 {
+	total := uint64(1)
+	for idx, _ := range t.items {
+		w := t.items[idx].Weight()
+		total = total * w
+	}
+	return total
+}
+
+func NewSequence(items ...Node) Node { return &Concat{items: items} }
+
 type Or struct {
 	items []Node
 }
@@ -52,6 +64,17 @@ func (t *Or) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 	return t.items[n].Expand(ctx, w, env)
 }
 
+func (t *Or) Weight() uint64 {
+	total := uint64(0)
+	for idx, _ := range t.items {
+		w := t.items[idx].Weight()
+		total += w
+	}
+	return total
+}
+
+func NewChoice(items ...Node) Node { return &Or{items: items} }
+
 type Term string
 
 func (t *Term) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
@@ -59,6 +82,23 @@ func (t *Term) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 	return err
 }
 
-func NewChoice(items ...Node) Node   { return &Or{items: items} }
-func NewSequence(items ...Node) Node { return &Concat{items: items} }
-func NewTerm(s string) Node          { t := Term(s); return &t }
+func (t *Term) Weight() uint64 {
+	return 1
+}
+
+func NewTerm(s string) Node { t := Term(s); return &t }
+
+func NewGenerator() (Node, error) {
+	items := make([]Node, 0)
+	if n, err := NewNoMeeting(); err != nil {
+		return nil, err
+	} else {
+		items = append(items, n)
+	}
+	if n, err := NewOOO(); err != nil {
+		return nil, err
+	} else {
+		items = append(items, n)
+	}
+	return NewChoice(items...), nil
+}

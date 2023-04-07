@@ -13,7 +13,7 @@
 
 package excuse
 
-var statement = NewChoice(
+var noDailyStatement = NewChoice(
 	NewTerm("I cannot attend the daily meeting"),
 	NewTerm("going to miss the meeting"),
 	NewTerm("gonna miss the meeting"),
@@ -30,7 +30,7 @@ var conjonction_consequence = NewChoice(
 	NewTerm("as a consequence"),
 	NewTerm("therefore"))
 
-var cause = NewChoice(
+var extenCause = NewChoice(
 	NewTerm("I'm feeling sick this morning"),
 	NewTerm("I'm not feeling great"),
 	NewTerm("I am having all the symptoms of a cold"),
@@ -62,10 +62,8 @@ var cause = NewChoice(
 	NewTerm("the network is down in the area"),
 	NewTerm("my nan slipped on a dung (long story short...)"))
 
-var sentence = NewChoice(
-	NewSequence(statement, conjonction_cause, cause),
-	NewSequence(cause, conjonction_consequence, statement))
-
-func NewJohn() (Node, error) {
-	return sentence, nil
+func NewNoMeeting() (Node, error) {
+	return NewChoice(
+		NewSequence(noDailyStatement, conjonction_cause, extenCause),
+		NewSequence(extenCause, conjonction_consequence, noDailyStatement)), nil
 }
