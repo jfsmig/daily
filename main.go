@@ -56,42 +56,7 @@ func main() {
 		log.Fatalln("excuse init error: ", err)
 	}
 
-	http.HandleFunc("/sitemap.xml", func() HandlerFunc {
-		type Args struct {
-			Date string
-		}
-		tpl := tt.Must(tt.New("sitemap").Parse(templateSitemapText))
-		args := Args{Date: time.Now().Truncate(25 * time.Hour).Format(time.RFC3339)}
-		return func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Add("Content-Type", "application/xml")
-			w.Header().Set("Cache-Control", "public, max-age=86400") // 1 day
-			if err := tpl.Execute(w, args); err != nil {
-				log.Println("Sitemap rendering error:", err)
-			}
-		}
-	}())
-
-	http.HandleFunc("/favicon.png", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Add("Content-Type", "image/png")
-			w.Header().Set("Cache-Control", "public, max-age=604800") // 1 week
-			if _, err := w.Write(icon); err != nil {
-				log.Println("Icon reply error:", err)
-			}
-		}
-	}())
-
-	http.HandleFunc("/robots.txt", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Add("Content-Type", "text/plain")
-			w.Header().Set("Cache-Control", "public, max-age=604800") // 1 week
-			if _, err := w.Write(robots); err != nil {
-				log.Println("Robots reply error:", err)
-			}
-		}
-	}())
-
-	generateExcuseRaw := func(w http.ResponseWriter, req *http.Request, e excuse.Node) {
+	generateExcuseRaw := func(w http.ResponseWriter, req *http.Request, e excuse.Generator) {
 		var sb strings.Builder
 		env := excuse.NewEnv(time.Now().UnixNano())
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -105,19 +70,9 @@ func main() {
 		}
 	}
 
-	http.HandleFunc("/raw/all", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseAny) }
-	}())
-	http.HandleFunc("/raw/ooo", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseOOO) }
-	}())
-	http.HandleFunc("/raw/meeting", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseMeeting) }
-	}())
-
 	tplMain := ht.Must(ht.New("index").Parse(templateIndexText))
 
-	generateExcuseHtml := func(w http.ResponseWriter, req *http.Request, gen excuse.Node) {
+	generateExcuseHtml := func(w http.ResponseWriter, req *http.Request, gen excuse.Generator) {
 		type Args struct {
 			Excuse  string
 			Refresh int64
@@ -138,15 +93,62 @@ func main() {
 		}
 	}
 
-	http.HandleFunc("/w/all", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
+	// A set of routes providing the excuse as a simple string
+	http.HandleFunc("/raw/ooo", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseOOO) }
 	}())
-	http.HandleFunc("/w/ooo", func() HandlerFunc {
+	http.HandleFunc("/raw/meeting", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseMeeting) }
+	}())
+	http.HandleFunc("/raw/any", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseAny) }
+	}())
+
+	// A set of routes providing the excuse as a "splash" html page
+	http.HandleFunc("/html/ooo", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseOOO) }
 	}())
-	http.HandleFunc("/w/meeting", func() HandlerFunc {
+	http.HandleFunc("/html/meeting", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseMeeting) }
 	}())
+	http.HandleFunc("/html/any", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
+	}())
+
+	http.HandleFunc("/sitemap.xml", func() HandlerFunc {
+		type Args struct {
+			Date string
+		}
+		tpl := tt.Must(tt.New("sitemap").Parse(templateSitemapText))
+		args := Args{Date: time.Now().Truncate(25 * time.Hour).Format(time.RFC3339)}
+		return func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Add("Content-Type", "application/xml")
+			w.Header().Set("Cache-Control", "public, max-age=86400") // 1 day
+			if err := tpl.Execute(w, args); err != nil {
+				log.Println("Sitemap rendering error:", err)
+			}
+		}
+	}())
+	http.HandleFunc("/favicon.png", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Add("Content-Type", "image/png")
+			w.Header().Set("Cache-Control", "public, max-age=604800") // 1 week
+			if _, err := w.Write(icon); err != nil {
+				log.Println("Icon reply error:", err)
+			}
+		}
+	}())
+	http.HandleFunc("/robots.txt", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Add("Content-Type", "text/plain")
+			w.Header().Set("Cache-Control", "public, max-age=604800") // 1 week
+			if _, err := w.Write(robots); err != nil {
+				log.Println("Robots reply error:", err)
+			}
+		}
+	}())
+
+	// By default, the landing page proposes
 	http.HandleFunc("/", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
 	}())

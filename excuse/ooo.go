@@ -90,14 +90,14 @@ var oooCauseVet = NewChoice(
 	NewTerm("my cat puked last night, it kept me up late. I'm too tired"),
 )
 
-func NewOOOMedical() (Node, error) {
+func NewOOOMedical() (Generator, error) {
 	cause := oooCauseMedical
 	return NewChoice(
 		NewSequence(oooTodayStatement, conjonction_cause, cause),
 		NewSequence(cause, conjonction_consequence, oooTodayStatement)), nil
 }
 
-func NewOOO() (Node, error) {
+func NewOOO() (Generator, error) {
 	cause := NewChoice(oooCauseMedical, oooCauseVet, oooCausePolice, oooCauseBadLuck, oooCauseCotorep)
 	return NewChoice(
 		NewSequence(oooTodayStatement, conjonction_cause, cause),

@@ -25,13 +25,13 @@ type Env struct {
 
 func NewEnv(seed int64) *Env { return &Env{Prng: rand.New(rand.NewSource(seed))} }
 
-type Node interface {
+type Generator interface {
 	Expand(ctx context.Context, w io.StringWriter, env *Env) error
 	Weight() uint64
 }
 
 type Concat struct {
-	items []Node
+	items []Generator
 }
 
 func (t *Concat) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
@@ -53,10 +53,10 @@ func (t *Concat) Weight() uint64 {
 	return total
 }
 
-func NewSequence(items ...Node) Node { return &Concat{items: items} }
+func NewSequence(items ...Generator) Generator { return &Concat{items: items} }
 
 type Or struct {
-	items []Node
+	items []Generator
 }
 
 func (t *Or) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
@@ -73,7 +73,7 @@ func (t *Or) Weight() uint64 {
 	return total
 }
 
-func NewChoice(items ...Node) Node { return &Or{items: items} }
+func NewChoice(items ...Generator) Generator { return &Or{items: items} }
 
 type Term string
 
@@ -86,10 +86,10 @@ func (t *Term) Weight() uint64 {
 	return 1
 }
 
-func NewTerm(s string) Node { t := Term(s); return &t }
+func NewTerm(s string) Generator { t := Term(s); return &t }
 
-func NewGenerator() (Node, error) {
-	items := make([]Node, 0)
+func NewGenerator() (Generator, error) {
+	items := make([]Generator, 0)
 	if n, err := NewNoMeeting(); err != nil {
 		return nil, err
 	} else {

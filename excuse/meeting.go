@@ -62,7 +62,7 @@ var extenCause = NewChoice(
 	NewTerm("the network is down in the area"),
 	NewTerm("my nan slipped on a dung (long story short...)"))
 
-func NewNoMeeting() (Node, error) {
+func NewNoMeeting() (Generator, error) {
 	return NewChoice(
 		NewSequence(noDailyStatement, conjonction_cause, extenCause),
 		NewSequence(extenCause, conjonction_consequence, noDailyStatement)), nil
