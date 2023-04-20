@@ -98,8 +98,19 @@ func NewOOOMedical() (Generator, error) {
 }
 
 func NewOOO() (Generator, error) {
-	cause := NewChoice(oooCauseMedical, oooCauseVet, oooCausePolice, oooCauseBadLuck, oooCauseCotorep)
+	cause := NewChoice(
+		oooCauseMedical,
+		oooCauseVet,
+		oooCausePolice,
+		oooCauseBadLuck,
+		oooCauseCotorep)
 	return NewChoice(
-		NewSequence(oooTodayStatement, conjonction_cause, cause),
-		NewSequence(cause, conjonction_consequence, oooTodayStatement)), nil
+		NewSequence(
+			oooTodayStatement,
+			conjonction_cause,
+			cause),
+		NewSequence(
+			cause,
+			conjonction_consequence,
+			oooTodayStatement)), nil
 }

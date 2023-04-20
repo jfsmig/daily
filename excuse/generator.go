@@ -17,6 +17,7 @@ import (
 	"context"
 	"io"
 	"math/rand"
+	"strings"
 )
 
 type Env struct {
@@ -27,7 +28,8 @@ func NewEnv(seed int64) *Env { return &Env{Prng: rand.New(rand.NewSource(seed))}
 
 type Generator interface {
 	Expand(ctx context.Context, w io.StringWriter, env *Env) error
-	Weight() uint64
+	Encode(out *strings.Builder)
+	Debug(out *strings.Builder)
 }
 
 type Concat struct {
@@ -44,36 +46,71 @@ func (t *Concat) Expand(ctx context.Context, w io.StringWriter, env *Env) error 
 	return nil
 }
 
-func (t *Concat) Weight() uint64 {
-	total := uint64(1)
-	for idx, _ := range t.items {
-		w := t.items[idx].Weight()
-		total = total * w
+func (t *Concat) Encode(out *strings.Builder) {
+	if len(t.items) > 0 {
+		t.items[0].Encode(out)
+		if len(t.items) > 1 {
+			for _, t := range t.items[1:] {
+				t.Encode(out)
+			}
+		}
 	}
-	return total
+}
+
+func (t *Concat) Debug(out *strings.Builder) {
+	out.WriteString(" Sequence(")
+	if len(t.items) > 0 {
+		t.items[0].Debug(out)
+		if len(t.items) > 1 {
+			for _, t := range t.items[1:] {
+				out.WriteRune(',')
+				t.Debug(out)
+			}
+		}
+	}
+	out.WriteRune(')')
 }
 
 func NewSequence(items ...Generator) Generator { return &Concat{items: items} }
 
-type Or struct {
+type Choice struct {
 	items []Generator
 }
 
-func (t *Or) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
+func (t *Choice) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 	n := env.Prng.Intn(len(t.items))
 	return t.items[n].Expand(ctx, w, env)
 }
 
-func (t *Or) Weight() uint64 {
-	total := uint64(0)
-	for idx, _ := range t.items {
-		w := t.items[idx].Weight()
-		total += w
+func (t *Choice) Encode(out *strings.Builder) {
+	out.WriteRune('<')
+	if len(t.items) > 0 {
+		t.items[0].Encode(out)
+		if len(t.items) > 1 {
+			for _, t := range t.items[1:] {
+				out.WriteRune('|')
+				t.Encode(out)
+			}
+		}
 	}
-	return total
+	out.WriteRune('>')
 }
 
-func NewChoice(items ...Generator) Generator { return &Or{items: items} }
+func (t *Choice) Debug(out *strings.Builder) {
+	out.WriteString(" Choice(")
+	if len(t.items) > 0 {
+		t.items[0].Debug(out)
+		if len(t.items) > 1 {
+			for _, t := range t.items[1:] {
+				out.WriteRune('|')
+				t.Debug(out)
+			}
+		}
+	}
+	out.WriteRune(')')
+}
+
+func NewChoice(items ...Generator) Generator { return &Choice{items: items} }
 
 type Term string
 
@@ -82,11 +119,25 @@ func (t *Term) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 	return err
 }
 
-func (t *Term) Weight() uint64 {
-	return 1
+func (t *Term) Encode(out *strings.Builder) { out.WriteString(string(*t)) }
+
+func (t *Term) Debug(out *strings.Builder) {
+	out.WriteString(" Term(")
+	out.WriteString(string(*t))
+	out.WriteRune(')')
 }
 
 func NewTerm(s string) Generator { t := Term(s); return &t }
+
+type Empty struct{}
+
+func (t *Empty) Expand(_ context.Context, _ io.StringWriter, _ *Env) error { return nil }
+
+func (t *Empty) Encode(out *strings.Builder) {}
+
+func (t *Empty) Debug(out *strings.Builder) { out.WriteString(" Empty()") }
+
+func NewEmpty() Generator { return &Empty{} }
 
 func NewGenerator() (Generator, error) {
 	items := make([]Generator, 0)
@@ -101,4 +152,16 @@ func NewGenerator() (Generator, error) {
 		items = append(items, n)
 	}
 	return NewChoice(items...), nil
+}
+
+func EncodeGenerator(g Generator) string {
+	str := strings.Builder{}
+	g.Encode(&str)
+	return str.String()
+}
+
+func DebugGenerator(g Generator) string {
+	str := strings.Builder{}
+	g.Debug(&str)
+	return str.String()
 }
