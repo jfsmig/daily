@@ -25,7 +25,8 @@ import (
 	"github.com/jfsmig/daily/excuse"
 )
 
-const defaultTimeSlot time.Duration = 5 * time.Minute
+const defaultTimeSlotRegen time.Duration = 5 * time.Minute
+const defaultTimeSlotRefresh time.Duration = defaultTimeSlotRegen + time.Second
 
 //go:embed shrug-emoticon.png
 var icon []byte
@@ -122,7 +123,7 @@ func main() {
 			Refresh int64
 		}
 		// This will change the excuse each hour
-		env := excuse.NewEnv(time.Now().Truncate(defaultTimeSlot).UnixNano())
+		env := excuse.NewEnv(time.Now().Truncate(defaultTimeSlotRegen).UnixNano())
 		var sb strings.Builder
 		_ = gen.Expand(req.Context(), &sb, env)
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -130,7 +131,7 @@ func main() {
 		w.Header().Set("Expires", "0")
 		args := Args{
 			Excuse:  sb.String(),
-			Refresh: int64(defaultTimeSlot.Seconds()),
+			Refresh: int64(defaultTimeSlotRefresh.Seconds()),
 		}
 		if err := tplMain.Execute(w, args); err != nil {
 			log.Println("Template rendering error:", err)
@@ -148,6 +149,28 @@ func main() {
 	}())
 	http.HandleFunc("/", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
+	}())
+
+	// Generate a long sentence that is helpful to diagnose design quirks.
+	generateLoremHtml := func(w http.ResponseWriter, req *http.Request) {
+		type Args struct {
+			Excuse  string
+			Refresh int64
+		}
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		args := Args{
+			Excuse:  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+			Refresh: 3600,
+		}
+		if err := tplMain.Execute(w, args); err != nil {
+			log.Println("Template rendering error:", err)
+		}
+	}
+
+	http.HandleFunc("/w/lorem", func() HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) { generateLoremHtml(w, req) }
 	}())
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
