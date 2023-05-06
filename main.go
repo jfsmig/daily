@@ -45,22 +45,22 @@ var templateSitemapText string
 type HandlerFunc func(http.ResponseWriter, *http.Request)
 
 func main() {
-	excuseAny, err := excuse.NewGenerator()
+	excuseAny, err := newGenerator()
 	if err != nil {
 		log.Fatalln("excuse init error: ", err)
 	}
-	excuseOOO, err := excuse.NewOOO()
+	excuseOOO, err := newOOO()
 	if err != nil {
 		log.Fatalln("excuse init error: ", err)
 	}
-	excuseMeeting, err := excuse.NewNoMeeting()
+	excuseMeeting, err := newNoMeeting()
 	if err != nil {
 		log.Fatalln("excuse init error: ", err)
 	}
 
 	tplMain := ht.Must(ht.New("index").Parse(templateIndexText))
 
-	generateExcuseHtml := func(w http.ResponseWriter, req *http.Request, gen excuse.Generator) {
+	generateExcuse := func(w http.ResponseWriter, req *http.Request, gen excuse.Generator) {
 		type Args struct {
 			Excuse  string
 			Refresh int64
@@ -84,36 +84,47 @@ func main() {
 		}
 
 		env := excuse.NewEnv(seed)
-		var sb strings.Builder
-		_ = gen.Expand(req.Context(), &sb, env)
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "0")
-		if req.URL.Query().Has("raw") {
-			if _, err := fmt.Fprintf(w, "#%d\n%s", seed, sb.String()); err != nil {
-				log.Println("Raw rendering error:", err)
+		if req.URL.Query().Has("debug") {
+			var sb strings.Builder
+			gen.Json(&sb)
+			w.Header().Add("Content-Type", "text/plain")
+			if _, err := w.Write([]byte(sb.String())); err != nil {
+				log.Println("Json rendering error:", err)
 			}
 		} else {
-			args := Args{
-				Excuse:  sb.String(),
-				Refresh: int64(defaultTimeSlotRefresh.Seconds()),
-				Seed:    seed,
-			}
-			if err := tplMain.Execute(w, args); err != nil {
-				log.Println("Template rendering error:", err)
+			var sb strings.Builder
+			_ = gen.Expand(req.Context(), &sb, env)
+			if req.URL.Query().Has("raw") {
+				w.Header().Add("Content-Type", "text/plain")
+				if _, err := fmt.Fprintf(w, "#%d\n%s", seed, sb.String()); err != nil {
+					log.Println("Raw rendering error:", err)
+				}
+			} else {
+				args := Args{
+					Excuse:  sb.String(),
+					Refresh: int64(defaultTimeSlotRefresh.Seconds()),
+					Seed:    seed,
+				}
+				w.Header().Add("Content-Type", "text/html")
+				if err := tplMain.Execute(w, args); err != nil {
+					log.Println("Template rendering error:", err)
+				}
 			}
 		}
 	}
 
 	// A set of routes providing the excuse as a "splash" html page
 	http.HandleFunc("/ooo", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseOOO) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseOOO) }
 	}())
 	http.HandleFunc("/meeting", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseMeeting) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseMeeting) }
 	}())
 	http.HandleFunc("/any", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseAny) }
 	}())
 
 	http.HandleFunc("/sitemap.xml", func() HandlerFunc {
@@ -151,7 +162,7 @@ func main() {
 
 	// By default, the landing page proposes
 	http.HandleFunc("/", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
+		return func(w http.ResponseWriter, req *http.Request) { generateExcuse(w, req, excuseAny) }
 	}())
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {

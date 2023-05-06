@@ -11,30 +11,55 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package excuse
+package main
 
 import (
 	"context"
+	"github.com/jfsmig/daily/excuse"
 	"math/rand"
 	"strings"
 	"testing"
 	"time"
 )
 
-func TestGenerator(t *testing.T) {
-	john, err := NewGenerator()
-	if err != nil {
-		t.Fatal(err)
+func testGenerator(t *testing.T, gen excuse.Generator) {
+	if maxLength := gen.MaxLength(); maxLength >= 128 {
+		t.Fatalf("Too long (max=128 gen=%d)", maxLength)
 	}
+
 	ctx := context.TODO()
-	env := Env{Prng: rand.New(rand.NewSource(time.Now().UnixNano()))}
+	env := excuse.Env{Prng: rand.New(rand.NewSource(time.Now().UnixNano()))}
 
 	var sb strings.Builder
 	for i := 0; i < 10; i++ {
 		sb.Reset()
-		if err = john.Expand(ctx, &sb, &env); err != nil {
+		if err := gen.Expand(ctx, &sb, &env); err != nil {
 			t.Fatal(err)
 		}
 		t.Log(">", sb.String())
 	}
+}
+
+func TestMeeting(t *testing.T) {
+	gen, err := newNoMeeting()
+	if err != nil {
+		t.Fatal(err)
+	}
+	testGenerator(t, gen)
+}
+
+func TestOOO(t *testing.T) {
+	gen, err := newOOO()
+	if err != nil {
+		t.Fatal(err)
+	}
+	testGenerator(t, gen)
+}
+
+func TestAny(t *testing.T) {
+	gen, err := newGenerator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	testGenerator(t, gen)
 }

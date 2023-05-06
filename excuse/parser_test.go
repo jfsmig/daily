@@ -16,7 +16,7 @@ package excuse
 import "testing"
 
 func test_parser2(t *testing.T, source, encoded string) {
-	gen, err := Parse(source)
+	gen, err := ParseExpression(source)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func test_parser2(t *testing.T, source, encoded string) {
 		t.Fatal("nil generator")
 	}
 	recoded := EncodeGenerator(gen)
-	t.Logf("gen: '%v' -> %s", gen, DebugGenerator(gen))
+	t.Logf("gen: '%v' -> %s", gen, JsonGenerator(gen))
 	t.Logf("source: \"%s\" encoded: \"%v\"", source, recoded)
 	if encoded != recoded {
 		t.Fatal("unexpected result")

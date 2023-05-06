@@ -29,13 +29,15 @@ func NewEnv(seed int64) *Env { return &Env{Prng: rand.New(rand.NewSource(seed))}
 type Generator interface {
 	Expand(ctx context.Context, w io.StringWriter, env *Env) error
 	Encode(out *strings.Builder)
-	Debug(out *strings.Builder)
+	Json(out *strings.Builder)
+	MaxLength() int
 }
 
 type Concat struct {
 	items []Generator
 }
 
+// Expand sequentially forward the call to each of its component, in order.
 func (t *Concat) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 	for idx, _ := range t.items {
 		if err := t.items[idx].Expand(ctx, w, env); err != nil {
@@ -57,18 +59,26 @@ func (t *Concat) Encode(out *strings.Builder) {
 	}
 }
 
-func (t *Concat) Debug(out *strings.Builder) {
-	out.WriteString(" Sequence(")
+func (t *Concat) Json(out *strings.Builder) {
+	out.WriteString("{\"type\":\"sequence\",\"items\":[")
 	if len(t.items) > 0 {
-		t.items[0].Debug(out)
+		t.items[0].Json(out)
 		if len(t.items) > 1 {
 			for _, t := range t.items[1:] {
 				out.WriteRune(',')
-				t.Debug(out)
+				t.Json(out)
 			}
 		}
 	}
-	out.WriteRune(')')
+	out.WriteString("]}")
+}
+
+func (t *Concat) MaxLength() int {
+	var total int
+	for i, _ := range t.items {
+		total += t.items[i].MaxLength()
+	}
+	return total
 }
 
 func NewSequence(items ...Generator) Generator { return &Concat{items: items} }
@@ -77,6 +87,7 @@ type Choice struct {
 	items []Generator
 }
 
+// Expand randomly picks a component and forwards the call to it.
 func (t *Choice) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 	n := env.Prng.Intn(len(t.items))
 	return t.items[n].Expand(ctx, w, env)
@@ -96,24 +107,35 @@ func (t *Choice) Encode(out *strings.Builder) {
 	out.WriteRune('>')
 }
 
-func (t *Choice) Debug(out *strings.Builder) {
-	out.WriteString(" Choice(")
+func (t *Choice) Json(out *strings.Builder) {
+	out.WriteString("{\"type\":\"choice\",\"items\":[")
 	if len(t.items) > 0 {
-		t.items[0].Debug(out)
+		t.items[0].Json(out)
 		if len(t.items) > 1 {
 			for _, t := range t.items[1:] {
-				out.WriteRune('|')
-				t.Debug(out)
+				out.WriteRune(',')
+				t.Json(out)
 			}
 		}
 	}
-	out.WriteRune(')')
+	out.WriteString("]}")
+}
+
+func (t *Choice) MaxLength() int {
+	var max int
+	for i, _ := range t.items {
+		if l := t.items[i].MaxLength(); l > max {
+			max = l
+		}
+	}
+	return max
 }
 
 func NewChoice(items ...Generator) Generator { return &Choice{items: items} }
 
 type Term string
 
+// Expand generates its input string
 func (t *Term) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 	_, err := w.WriteString(string(*t))
 	return err
@@ -121,38 +143,28 @@ func (t *Term) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
 
 func (t *Term) Encode(out *strings.Builder) { out.WriteString(string(*t)) }
 
-func (t *Term) Debug(out *strings.Builder) {
-	out.WriteString(" Term(")
+func (t *Term) Json(out *strings.Builder) {
+	out.WriteRune('"')
 	out.WriteString(string(*t))
-	out.WriteRune(')')
+	out.WriteRune('"')
 }
+
+func (t *Term) MaxLength() int { return len(*t) }
 
 func NewTerm(s string) Generator { t := Term(s); return &t }
 
 type Empty struct{}
 
+// Expand generates nothing
 func (t *Empty) Expand(_ context.Context, _ io.StringWriter, _ *Env) error { return nil }
 
 func (t *Empty) Encode(out *strings.Builder) {}
 
-func (t *Empty) Debug(out *strings.Builder) { out.WriteString(" Empty()") }
+func (t *Empty) Json(out *strings.Builder) { out.WriteString("nil") }
+
+func (t *Empty) MaxLength() int { return 0 }
 
 func NewEmpty() Generator { return &Empty{} }
-
-func NewGenerator() (Generator, error) {
-	items := make([]Generator, 0)
-	if n, err := NewNoMeeting(); err != nil {
-		return nil, err
-	} else {
-		items = append(items, n)
-	}
-	if n, err := NewOOO(); err != nil {
-		return nil, err
-	} else {
-		items = append(items, n)
-	}
-	return NewChoice(items...), nil
-}
 
 func EncodeGenerator(g Generator) string {
 	str := strings.Builder{}
@@ -160,8 +172,8 @@ func EncodeGenerator(g Generator) string {
 	return str.String()
 }
 
-func DebugGenerator(g Generator) string {
+func JsonGenerator(g Generator) string {
 	str := strings.Builder{}
-	g.Debug(&str)
+	g.Json(&str)
 	return str.String()
 }

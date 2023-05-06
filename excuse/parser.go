@@ -14,7 +14,10 @@
 package excuse
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -132,7 +135,7 @@ func (f *frameConcat) parse(in io.RuneReader) error {
 // "plop" -> Term("plop")
 // "plip plop <a,e,i,o,u> pouet" ->
 // Concat(Term("plip plop"), Choice(Term("a"), Term("e"), Term("i"), Term("o"), Term("u")), Term("pouet"))
-func Parse(encoded string) (Generator, error) {
+func ParseExpression(encoded string) (Generator, error) {
 	in := strings.NewReader(encoded)
 	top := newFrameConcat()
 	if err := top.parse(in); err != nil {
@@ -150,4 +153,33 @@ func Parse(encoded string) (Generator, error) {
 		// for empty (collapsed) pattern.
 		return NewEmpty(), nil
 	}
+}
+
+func ParseStream(r io.Reader) (Generator, error) {
+	in := bufio.NewScanner(r)
+	out := &Choice{items: make([]Generator, 0)}
+	for lineNum := 1; in.Scan(); lineNum++ {
+		line := strings.Trim(in.Text(), "\n\t\r ")
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		if item, err := ParseExpression(line); err != nil {
+			return nil, fmt.Errorf("Error at line %d: %w", lineNum, err)
+		} else {
+			out.items = append(out.items, item)
+		}
+	}
+	if err := in.Err(); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func ParseStreamString(encoded string) (Generator, error) {
+	return ParseStream(strings.NewReader(encoded))
+}
+
+func ParseStreamBytes(encoded []byte) (Generator, error) {
+	return ParseStream(bytes.NewReader(encoded))
 }
