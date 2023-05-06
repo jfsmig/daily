@@ -15,9 +15,11 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	ht "html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	tt "text/template"
 	"time"
@@ -56,62 +58,61 @@ func main() {
 		log.Fatalln("excuse init error: ", err)
 	}
 
-	generateExcuseRaw := func(w http.ResponseWriter, req *http.Request, e excuse.Generator) {
-		var sb strings.Builder
-		env := excuse.NewEnv(time.Now().UnixNano())
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
-		if err := e.Expand(req.Context(), &sb, env); err != nil {
-			log.Println("Template rendering error:", err)
-		} else {
-			s := strings.Trim(sb.String(), " ")
-			w.Write([]byte(s + "\n"))
-		}
-	}
-
 	tplMain := ht.Must(ht.New("index").Parse(templateIndexText))
 
 	generateExcuseHtml := func(w http.ResponseWriter, req *http.Request, gen excuse.Generator) {
 		type Args struct {
 			Excuse  string
 			Refresh int64
+			Seed    int64
 		}
-		// This will change the excuse each hour
-		env := excuse.NewEnv(time.Now().Truncate(defaultTimeSlotRegen).UnixNano())
+
+		seed := int64(0)
+		if req.URL.Query().Has("seed") {
+			if s, err := strconv.ParseInt(req.URL.Query().Get("seed"), 10, 63); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			} else {
+				seed = s
+			}
+		} else {
+			if req.URL.Query().Has("raw") {
+				seed = time.Now().UnixNano()
+			} else {
+				seed = time.Now().Truncate(defaultTimeSlotRegen).UnixNano()
+			}
+		}
+
+		env := excuse.NewEnv(seed)
 		var sb strings.Builder
 		_ = gen.Expand(req.Context(), &sb, env)
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "0")
-		args := Args{
-			Excuse:  sb.String(),
-			Refresh: int64(defaultTimeSlotRefresh.Seconds()),
-		}
-		if err := tplMain.Execute(w, args); err != nil {
-			log.Println("Template rendering error:", err)
+		if req.URL.Query().Has("raw") {
+			if _, err := fmt.Fprintf(w, "#%d\n%s", seed, sb.String()); err != nil {
+				log.Println("Raw rendering error:", err)
+			}
+		} else {
+			args := Args{
+				Excuse:  sb.String(),
+				Refresh: int64(defaultTimeSlotRefresh.Seconds()),
+				Seed:    seed,
+			}
+			if err := tplMain.Execute(w, args); err != nil {
+				log.Println("Template rendering error:", err)
+			}
 		}
 	}
 
-	// A set of routes providing the excuse as a simple string
-	http.HandleFunc("/raw/ooo", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseOOO) }
-	}())
-	http.HandleFunc("/raw/meeting", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseMeeting) }
-	}())
-	http.HandleFunc("/raw/any", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateExcuseRaw(w, req, excuseAny) }
-	}())
-
 	// A set of routes providing the excuse as a "splash" html page
-	http.HandleFunc("/html/ooo", func() HandlerFunc {
+	http.HandleFunc("/ooo", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseOOO) }
 	}())
-	http.HandleFunc("/html/meeting", func() HandlerFunc {
+	http.HandleFunc("/meeting", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseMeeting) }
 	}())
-	http.HandleFunc("/html/any", func() HandlerFunc {
+	http.HandleFunc("/any", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
 	}())
 
@@ -151,28 +152,6 @@ func main() {
 	// By default, the landing page proposes
 	http.HandleFunc("/", func() HandlerFunc {
 		return func(w http.ResponseWriter, req *http.Request) { generateExcuseHtml(w, req, excuseAny) }
-	}())
-
-	// Generate a long sentence that is helpful to diagnose design quirks.
-	generateLoremHtml := func(w http.ResponseWriter, req *http.Request) {
-		type Args struct {
-			Excuse  string
-			Refresh int64
-		}
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
-		args := Args{
-			Excuse:  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-			Refresh: 3600,
-		}
-		if err := tplMain.Execute(w, args); err != nil {
-			log.Println("Template rendering error:", err)
-		}
-	}
-
-	http.HandleFunc("/w/lorem", func() HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) { generateLoremHtml(w, req) }
 	}())
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
