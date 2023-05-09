@@ -60,7 +60,7 @@ func (t *Concat) Encode(out *strings.Builder) {
 }
 
 func (t *Concat) Json(out *strings.Builder) {
-	out.WriteString("{\"type\":\"sequence\",\"items\":[")
+	out.WriteString("[")
 	if len(t.items) > 0 {
 		t.items[0].Json(out)
 		if len(t.items) > 1 {
@@ -70,7 +70,7 @@ func (t *Concat) Json(out *strings.Builder) {
 			}
 		}
 	}
-	out.WriteString("]}")
+	out.WriteString("]")
 }
 
 func (t *Concat) MaxLength() int {
@@ -108,17 +108,12 @@ func (t *Choice) Encode(out *strings.Builder) {
 }
 
 func (t *Choice) Json(out *strings.Builder) {
-	out.WriteString("{\"type\":\"choice\",\"items\":[")
-	if len(t.items) > 0 {
-		t.items[0].Json(out)
-		if len(t.items) > 1 {
-			for _, t := range t.items[1:] {
-				out.WriteRune(',')
-				t.Json(out)
-			}
-		}
+	out.WriteString("[\"?\"")
+	for _, t := range t.items {
+		out.WriteRune(',')
+		t.Json(out)
 	}
-	out.WriteString("]}")
+	out.WriteString("]")
 }
 
 func (t *Choice) MaxLength() int {

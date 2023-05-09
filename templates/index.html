@@ -24,22 +24,21 @@
     <meta property="og:description" content="Today's excuse to not attend the daily meeting">
     <meta property="og:image" content="/favicon.png">
     <meta property="fb:admins" content="jf.smigielski">
-    <meta http-equiv="refresh" content="{{.Refresh}}">
-    <meta property="daily:seed" content="{{.Seed}}">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Quicksand">
     <style>
         body { margin: 0; padding: 0; background-color: #222; }
         main { text-align: center;  margin: 0; padding: 0; }
         h1, a { text-align: center; font-family: 'Quicksand'; }
         h1 { font-weight: inherit; font-size:7vw; color: #4681b3; top:auto; vertical-align: middle; }
-        a { text-align: center; width: 100%; font-size:3vw; color: lightgray; text-decoration: none; position: fixed; bottom: 0; left: 0; margin: auto; }
+        a { text-align: center; width: 100%; font-size:3vw; color: lightgray; text-decoration: none; margin: auto; display: block; }
         p, footer { visibility: hidden; }
     </style>
 </head>
 <body itemscope itemtype="http://schema.org/WebPage">
 <main>
-    <h1>{{.Excuse}}</h1>
-    <a href="https://excuse.wadef.uk">excuse.wadef.uk</a>
+    <h1>Wanna skip that meeting?</h1>
+    <a href="/ooo">👉 Out Of Office</a>
+    <a href="/meeting">👉Daily Meeting</a>
     <p>
         Your daily enterprise-grade excuse to not attend your daily meeting. Use with parsimony.
         It's very important to vary the excuses to remain credible and never let any sort of repetition to take place.
@@ -49,5 +48,4 @@
 <footer>
     Code hosted on https://github.com/jfsmig/daily,
     Hosted in Roubaix by https://ovhcloud.com,
-    Tooled by https://clever-cloud.com
 </footer></body></html>

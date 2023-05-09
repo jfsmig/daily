@@ -64,9 +64,9 @@ func (f *frameChoice) parse(in io.RuneReader) error {
 			f.parts = append(f.parts, g)
 		}
 		switch err {
-		case io.EOF:
+		case io.EOF, errClosed:
 			return err
-		case errClosed, nil:
+		case nil:
 			continue
 		default:
 			return err
