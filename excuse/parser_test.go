@@ -49,4 +49,7 @@ func TestParser_SimpleChoice(t *testing.T) {
 
 func TestParser_SimpleConcat(t *testing.T) {
 	test_parser(t, "plop <mmlm|mxls>")
+	test_parser2(t, "qqq <plep|plup>", "qqq <plep|plup>")
+	test_parser2(t, "<plop|plip> qqq", "<plop|plip> qqq")
+	test_parser2(t, "<plop|plip><plep|plup>", "<plop|plip><plep|plup>")
 }

@@ -22,8 +22,11 @@ import (
 	"time"
 )
 
-func testGenerator(t *testing.T, gen excuse.Generator) {
-	if maxLength := gen.MaxLength(); maxLength >= 128 {
+func testGenerator(t *testing.T, genStatement, genCause excuse.Generator) {
+	if maxLength := genStatement.MaxLength(); maxLength >= 32 {
+		t.Fatalf("Too long (max=32 gen=%d)", maxLength)
+	}
+	if maxLength := genCause.MaxLength(); maxLength >= 128 {
 		t.Fatalf("Too long (max=128 gen=%d)", maxLength)
 	}
 
@@ -33,7 +36,14 @@ func testGenerator(t *testing.T, gen excuse.Generator) {
 	var sb strings.Builder
 	for i := 0; i < 10; i++ {
 		sb.Reset()
-		if err := gen.Expand(ctx, &sb, &env); err != nil {
+		if err := genStatement.Expand(ctx, &sb, &env); err != nil {
+			t.Fatal(err)
+		}
+		t.Log(">", sb.String())
+	}
+	for i := 0; i < 10; i++ {
+		sb.Reset()
+		if err := genCause.Expand(ctx, &sb, &env); err != nil {
 			t.Fatal(err)
 		}
 		t.Log(">", sb.String())
@@ -41,25 +51,18 @@ func testGenerator(t *testing.T, gen excuse.Generator) {
 }
 
 func TestMeeting(t *testing.T) {
-	gen, err := newNoMeeting()
-	if err != nil {
-		t.Fatal(err)
-	}
-	testGenerator(t, gen)
+	statement, cause := newNoMeeting()
+	testGenerator(t, statement, cause)
 }
 
 func TestOOO(t *testing.T) {
-	gen, err := newOOO()
-	if err != nil {
-		t.Fatal(err)
-	}
-	testGenerator(t, gen)
+	statement, cause := newOOO()
+	testGenerator(t, statement, cause)
 }
 
-func TestAny(t *testing.T) {
-	gen, err := newGenerator()
-	if err != nil {
-		t.Fatal(err)
+func TestLoad(t *testing.T) {
+	mux := initHttp()
+	if mux == nil {
+		t.Fatal("invalid http multiplexer")
 	}
-	testGenerator(t, gen)
 }
