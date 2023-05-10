@@ -15,6 +15,7 @@ package excuse
 
 import (
 	"context"
+	"errors"
 	"io"
 	"math/rand"
 	"strings"
@@ -27,14 +28,21 @@ type Env struct {
 func NewEnv(seed int64) *Env { return &Env{Prng: rand.New(rand.NewSource(seed))} }
 
 type Generator interface {
+	// Expand populates the w output with the runes of a random string
 	Expand(ctx context.Context, w io.StringWriter, env *Env) error
+	// Encode dumps a representation of the Generator that can be parsed in another Generator producing the same output
 	Encode(out *strings.Builder)
+	// Json dumps a JSON representation of the current Generator
 	Json(out *strings.Builder)
+	// MaxLength returns the longets possible string the current Generator can produce
 	MaxLength() int
+	// Count returns the number of possible choices at this level of the tree
+	Count() int
 }
 
 type Concat struct {
 	items []Generator
+	count int
 }
 
 // Expand sequentially forward the call to each of its component, in order.
@@ -80,16 +88,35 @@ func (t *Concat) MaxLength() int {
 	return total
 }
 
-func NewSequence(items ...Generator) Generator { return &Concat{items: items} }
+func (t *Concat) Count() int { return t.count }
+
+func NewSequence(items ...Generator) Generator {
+	out := &Concat{items: items}
+	// Recompute the count of possibilities here
+	out.count = 1
+	for i, _ := range out.items {
+		out.count *= out.items[i].Count()
+	}
+	return out
+}
 
 type Choice struct {
 	items []Generator
+	count int
 }
 
 // Expand randomly picks a component and forwards the call to it.
+// The function respects a weight set to the number of possibilities behind each component of the choice.
 func (t *Choice) Expand(ctx context.Context, w io.StringWriter, env *Env) error {
-	n := env.Prng.Intn(len(t.items))
-	return t.items[n].Expand(ctx, w, env)
+	needle := env.Prng.Intn(t.Count())
+	cursor := 0
+	for _, x := range t.items {
+		cursor += x.Count()
+		if cursor >= needle {
+			return x.Expand(ctx, w, env)
+		}
+	}
+	return errors.New("bug")
 }
 
 func (t *Choice) Encode(out *strings.Builder) {
@@ -125,7 +152,16 @@ func (t *Choice) MaxLength() int {
 	return max
 }
 
-func NewChoice(items ...Generator) Generator { return &Choice{items: items} }
+func (t *Choice) Count() int { return t.count }
+
+func NewChoice(items ...Generator) Generator {
+	out := &Choice{items: items}
+	out.count = 0
+	for i, _ := range out.items {
+		out.count += out.items[i].Count()
+	}
+	return out
+}
 
 type Term string
 
@@ -145,6 +181,8 @@ func (t *Term) Json(out *strings.Builder) {
 
 func (t *Term) MaxLength() int { return len(*t) }
 
+func (t *Term) Count() int { return 1 }
+
 func NewTerm(s string) Generator { t := Term(s); return &t }
 
 type Empty struct{}
@@ -157,6 +195,8 @@ func (t *Empty) Encode(out *strings.Builder) {}
 func (t *Empty) Json(out *strings.Builder) { out.WriteString("nil") }
 
 func (t *Empty) MaxLength() int { return 0 }
+
+func (t *Empty) Count() int { return 1 }
 
 func NewEmpty() Generator { return &Empty{} }
 

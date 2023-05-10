@@ -157,7 +157,7 @@ func ParseExpression(encoded string) (Generator, error) {
 
 func ParseStream(r io.Reader) (Generator, error) {
 	in := bufio.NewScanner(r)
-	out := &Choice{items: make([]Generator, 0)}
+	parts := make([]Generator, 0)
 	for lineNum := 1; in.Scan(); lineNum++ {
 		line := strings.Trim(in.Text(), "\n\t\r ")
 		if strings.HasPrefix(line, "#") {
@@ -166,14 +166,14 @@ func ParseStream(r io.Reader) (Generator, error) {
 		if item, err := ParseExpression(line); err != nil {
 			return nil, fmt.Errorf("Error at line %d: %w", lineNum, err)
 		} else {
-			out.items = append(out.items, item)
+			parts = append(parts, item)
 		}
 	}
 	if err := in.Err(); err != nil {
 		return nil, err
 	}
 
-	return out, nil
+	return NewChoice(parts...), nil
 }
 
 func ParseStreamString(encoded string) (Generator, error) {
