@@ -43,7 +43,6 @@ func (t *Concat) Expand(ctx context.Context, w io.StringWriter, env *Env) error 
 		if err := t.items[idx].Expand(ctx, w, env); err != nil {
 			return err
 		}
-		_, _ = w.WriteString(" ")
 	}
 	return nil
 }
