@@ -8,7 +8,7 @@ I've had a hair <dye|douche bag> disaster
 my curlers burned my hair, and I had to go to the hairdresser
 I am stuck in my house because the door's broken
 I forgot to come back to work after lunch
-my brain went to sleep, and I couldn't wake it up
+my <right arm|brain> went to sleep, and I couldn't wake it up
 I forgot what day of the week it was
 my dog has had a big fright and I don't want to leave him
 I drank too much last night, and I don't know where I am
@@ -19,7 +19,7 @@ I woke up and unexpectedly had to drive my family to another state
 my bus broke down and was held up by robbers
 I was arrested as a result of <mistaken identity|extreme blood alcohol|unbearable smell>
 I totaled my wife's jeep in a collision with <a cow|my mother-in-law>
-a <IRS agent|hitman|US Marshall> was looking for me
+a <IRS agent|hitman|US Marshall|guy in leather> was looking for me
 I eloped. They are after, but won't catch me
 I had to be there for my <mother|partner>'s grand jury trial
 I had to ship my <mother-in-law body|grandmother's bones> to her homeland, but she doesn't agree
@@ -41,3 +41,4 @@ I was swimming too fast and smacked my head on the poolside
 I've been bitten by <an insect|a spider> and the larvaes start to get out
 someone slipped drugs in my drink last night
 my buttplug got sucked in
+I identify as on holiday
