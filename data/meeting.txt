@@ -1,7 +1,7 @@
 I'm feeling <bad|sick> this morning
 I'm not feeling <fine|great|well>
 I <think I have|am having all the symptoms of> a <cold|flu>
-<the network is down|it's blackout> in the <whole area|area>< | currently using a weak phone connection| all I have is a weak data link>
+<the network is down|it's blackout> in the <whole area|area> and <I'm currently using a weak phone connection|all I have is a weak data link>
 the network is down, I expect someone to check for the cables right during the meeting
 <<network|power> outage|blizzard> here!
 power outage here in the area, I am going downtown to fetch some fuel for the generator
