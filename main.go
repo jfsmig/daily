@@ -15,6 +15,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	ht "html/template"
 	"log"
 	"net/http"
@@ -103,10 +104,9 @@ func initHttp() http.Handler {
 		if req.URL.Query().Has("debug") {
 			genStatement.Json(&sbStatement)
 			genCause.Json(&sbCause)
-			w.Header().Add("Content-Type", "application/json")
-			_, _ = w.Write([]byte(sbStatement.String()))
-			_, _ = w.Write([]byte("\n"))
-			_, _ = w.Write([]byte(sbCause.String()))
+			w.Header().Add("Content-Type", "text/plain")
+			_, _ = fmt.Fprintf(w, "%v\n%s\n", genStatement.Count(), sbStatement.String())
+			_, _ = fmt.Fprintf(w, "%v\n%s\n", genCause.Count(), sbCause.String())
 		} else {
 			_ = genStatement.Expand(req.Context(), &sbStatement, env)
 			_ = genCause.Expand(req.Context(), &sbCause, env)
