@@ -120,15 +120,16 @@ func initHttp() http.Handler {
 				}
 			} else {
 				type Args struct {
-					Refresh   int64
 					Seed      int64
+					Refresh   int64
 					Statement string
 					Excuse    string
 				}
 				args := Args{
+					Seed:      seed,
+					Refresh:   int64(defaultTimeSlotRefresh.Seconds()),
 					Statement: sbStatement.String(),
 					Excuse:    sbCause.String(),
-					Refresh:   int64(defaultTimeSlotRefresh.Seconds()),
 				}
 				w.Header().Add("Content-Type", "text/html")
 				if err := tplSplash.Execute(w, args); err != nil {
