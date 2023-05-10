@@ -26,7 +26,7 @@ import (
 	"github.com/jfsmig/daily/excuse"
 )
 
-const defaultTimeSlotRegen time.Duration = 5 * time.Minute
+const defaultTimeSlotRegen time.Duration = 2 * time.Minute
 const defaultTimeSlotRefresh time.Duration = defaultTimeSlotRegen + time.Second
 
 //go:embed templates/*
@@ -77,6 +77,10 @@ func initHttp() http.Handler {
 	tplSitemap := must(ht.New("sitemap").Parse(loadS("templates/sitemap.xml")))
 	robotsBytes := load("templates/robots.txt")
 	iconBytes := load("templates/shrug-emoticon.png")
+
+	log.Printf("%v/%v OOO, %v/%v Meeting",
+		statementOOO.Count(), excuseOOO.Count(),
+		statementMeeting.Count(), excuseMeeting.Count())
 
 	generateExcuse := func(w http.ResponseWriter, req *http.Request, genStatement, genCause excuse.Generator) {
 		seed := int64(0)
