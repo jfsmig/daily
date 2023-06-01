@@ -10,7 +10,6 @@ it's blizzard today, snow is piling all around here and it affects the network i
 due to the blizzard, the power supply isn't stable enough to let me attend
 it's haircut day! The only time slot available is incompatible with the meeting
 I tried to cut my hair myself, it's now an emergency
-it's shower day and... it takes time
 I'm waiting for a parcel delivery
 I need to go to the parcel pickup point
 it's my naturist day, and I wouldn't expose my perfect body to the team.
@@ -28,3 +27,6 @@ my <colonoscopy|prostate exam> <doesn't happen as expected|won't be done yet>
 my <wife|nan> slipped on a dung (long story short...)
 due to a couple of errands and several expected interruptions
 my <drunk neighbour beat his wife|neighbor got robbed> and the police is interviewing me
+it's <|annual> <shower|checkup> <day|today>. <It takes some time...|Might not make it back on time>
+my <grandad|dog> got out, I have to chase <him|him before he reaches the <river|highway>>
+my <wife|daughter|nan> got out, I have to chase her<|. I keep you posted>
